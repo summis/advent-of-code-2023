@@ -66,15 +66,7 @@ def parse_numbers(matrix: Matrix) -> List[Number]:
     return numbers
 
 
-    
-
-
-def main():
-    parser = argparse.ArgumentParser(description="Return sum numbers adjanced to characters")
-    parser.add_argument('input_file', help='Path to the input file')
-
-    args = parser.parse_args()
-
+def part1(args):
     numbers = set()
     with open(args.input_file, 'r') as input_matrix:
         numbers = parse_numbers(input_matrix)
@@ -90,7 +82,52 @@ def main():
             total_sum += number["value"]
 
     print(total_sum)
+
+
+def parse_gears(matrix: Matrix) -> Set[Point]:
+    points = set()
+
+    for j, row in enumerate(matrix):
+        for i, char in enumerate(row):
+            if char == "*":
+                points.add(Point(i, j))
+
+    return points
+
+
+def part2(args):
+    numbers = set()
+    with open(args.input_file, 'r') as input_matrix:
+        numbers = parse_numbers(input_matrix)
+
+    gears = set()
+    with open(args.input_file, 'r') as input_matrix:
+        gears = parse_gears(input_matrix)
+
+    numbers_adjaced_to_gears = {
+        gear: [number for number in numbers if gear in calculate_neighborhood(number["location"]) ]
+        for gear in gears
+    }
+
+    total_sum = 0
+
+    for _, numbers in numbers_adjaced_to_gears.items():
+        if len(numbers) == 2:
+            total_sum += numbers[0]["value"] * numbers[1]["value"]
+
+    print(total_sum)
         
+
+def main():
+    parser = argparse.ArgumentParser(description="Return sum numbers adjanced to characters")
+    parser.add_argument('input_file', help='Path to the input file')
+    parser.add_argument('--gears', action='store_true', help='Calculate gear sums')
+    args = parser.parse_args()
+
+    if args.gears:
+        part2(args)
+    else:
+        part1(args)
 
 
 if __name__ == "__main__":
