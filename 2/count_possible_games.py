@@ -49,19 +49,43 @@ def is_game_possible(game: Game) -> bool:
     return all(is_round_possible(round) for round in game["rounds"])
 
 
+class Bag(TypedDict):
+    red: int
+    green: int
+    blue: int
+
+
+def get_minimal_bag_enabling_game(game: Game) -> Bag:
+    enabling_bag = Bag(red=0, green=0, blue=0)
+
+    for round in game["rounds"]:
+        for color in ["red", "green", "blue"]: 
+            enabling_bag[color] = max(enabling_bag[color], round[color])
+
+    return enabling_bag
+
+
+def calculate_power_of_set(bag: Bag) -> int:
+    return bag["blue"] * bag["green"] * bag["red"]
+
+
 def main():
     parser = argparse.ArgumentParser(description="Return sum of ids of games that are possible.")
     parser.add_argument('input_file', help='Path to the input file')
+    parser.add_argument('--count-powers', action='store_true', help='Calculates powers of bags')
     
     args = parser.parse_args()
 
     total_sum = 0
-
+    
     with open(args.input_file, 'r') as file:
         for line in file:
             game = parse_game(line)
-            if is_game_possible(game):
-                total_sum += int(game["id"])
+            if args.count_powers: 
+                total_sum += calculate_power_of_set(get_minimal_bag_enabling_game(game))
+            else:
+                if is_game_possible(game):
+                    total_sum += int(game["id"])
 
     print(total_sum)
 
