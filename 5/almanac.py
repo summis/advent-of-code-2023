@@ -25,8 +25,56 @@ def part1():
     ]))
 
 
+def apply_mapping(_range, mapping):
+    start, end = _range
+    dest, src, lenght = mapping
+    
+    s1 = max(start, min(src, end))
+    s2 = min(end, max(src + lenght, start))
+    
+    return (start, s1), (s1, s2), (s2, end), (s1 + dest-src, s2 + dest-src)
+
+
+def not_empty(_range):
+    start, end = _range
+    return start < end
+
+
+def apply_map_to_range(ranges, map):
+    input_ranges = ranges
+    output_ranges = set()
+
+    for mapping in map:
+        inputs_for_next_round = set()
+        for _range in input_ranges:
+            i1, _, i2, o = apply_mapping(_range, mapping)
+
+            if not_empty(o):
+                output_ranges.add(o)
+
+            if not_empty(i1):
+                inputs_for_next_round.add(i1)
+
+            if not_empty(i2):
+                inputs_for_next_round.add(i2)
+        
+        input_ranges = inputs_for_next_round
+
+    
+    return output_ranges.union(inputs_for_next_round)
+            
+
 def part2():
-    pass
+    with open("input") as f:
+        data = f.read().split("\n\n")
+        _ranges = [int(x) for x  in data[0].split(":")[1].strip().split()]
+
+    starts = [x for i, x in enumerate(_ranges) if i % 2 == 0]
+    lengths = [x for i, x in enumerate(_ranges) if i % 2 == 1]
+    ranges = set(x for x in zip(starts, [x + y for x, y in zip(starts, lengths)]))
+    maps = [parse_map(x) for x in data[1:]]
+
+    print(min(x for x, _ in reduce(apply_map_to_range, maps, ranges)))
 
 
 def main():
