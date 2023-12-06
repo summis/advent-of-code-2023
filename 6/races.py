@@ -20,7 +20,14 @@ def part1():
 
 
 def part2():
-    pass
+    with open("input") as f:
+        data = f.read().splitlines()
+
+    time = int(data[0].split(":")[1].strip().replace(" ", ""))
+    distance = int(data[1].split(":")[1].strip().replace(" ", ""))
+
+    print(sum(calc_distance(time, x) > distance for x in range(time)))
+
 
 
 def main():
