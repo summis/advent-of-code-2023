@@ -13,10 +13,15 @@ def next_value(l):
 
 def part1():
     print(sum(next_value(x) for x in data))
-    
+
+
+def previous_value(l):
+    if all(x==0 for x in l): return 0
+    return l[0] - previous_value(diffs(l))
+
 
 def part2():
-    pass
+    print(sum(map(previous_value, data)))
 
 
 def main():
