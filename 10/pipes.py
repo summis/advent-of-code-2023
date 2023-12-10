@@ -15,23 +15,23 @@ class Directions(enum.Enum):
     WEST = enum.auto()
 
 
-from_to_map = {
-    Directions.NORTH: {
+next_direction = {
+    Directions.SOUTH: {
         "|": Directions.SOUTH,
         "L": Directions.EAST,
         "J": Directions.WEST,
     },
-    Directions.SOUTH: {
+    Directions.NORTH: {
         "|": Directions.NORTH,
         "7": Directions.WEST,
         "F": Directions.EAST
     },
-    Directions.EAST: {
+    Directions.WEST: {
         "-": Directions.WEST,
         "L": Directions.NORTH,
         "F": Directions.SOUTH
     },
-    Directions.WEST: {
+    Directions.EAST: {
         "-": Directions.EAST,
         "J": Directions.NORTH,
         "7": Directions.SOUTH,
@@ -43,13 +43,6 @@ delta = {
     Directions.SOUTH: (1, 0),
     Directions.WEST: (0, -1),
     Directions.EAST: (0, 1)
-}
-
-to_from_map = {
-    Directions.NORTH: Directions.SOUTH,
-    Directions.SOUTH: Directions.NORTH,
-    Directions.WEST: Directions.EAST,
-    Directions.EAST: Directions.WEST
 }
 
 
@@ -70,7 +63,7 @@ def follow_path(start, start_character, to_direction):
         if c == "S":
             break
 
-        to = from_to_map[to_from_map[to]][c]
+        to = next_direction[to][c]
 
     return path 
 
