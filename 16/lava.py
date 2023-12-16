@@ -57,7 +57,7 @@ def calculate_new_point(point, direction):
     raise Exception("Invalid direction")
 
 
-def part1():
+def energize(initial_point, initial_direction):
     visited_paths = set()
     visited_points = set()
 
@@ -68,15 +68,26 @@ def part1():
         visited_paths.add((point, direction))
         visited_points.add(point)
         
-        element = tiles[point]
-
-        for new_direction in continuations[(element, direction)]:
-            new_point = calculate_new_point(point, new_direction)
-            walk(new_point, new_direction)
+        for new_direction in continuations[(tiles[point], direction)]:
+            walk(calculate_new_point(point, new_direction), new_direction)
     
-    walk((0, 0), "east")
-    print(len(visited_points))
+    walk(initial_point, initial_direction)
+    return len(visited_points)
+
+
+def part1():
+    print(energize((0,0), "east"))
+
+
+def part2():
+    start_configurations = (
+        [((y, 0), "east") for y in range(Y_MAX)]
+        + [((y, X_MAX -1), "west") for y in range(Y_MAX)]
+        + [((0, x), "south") for x in range(X_MAX)]
+        + [((Y_MAX - 1, x), "north") for x in range(X_MAX)]
+    )
+    print(max(energize(point, direction) for point, direction in start_configurations))
 
 
 part1()
-
+part2()
