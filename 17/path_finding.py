@@ -21,6 +21,18 @@
 
 import math
 
+from queue import PriorityQueue
+
+from dataclasses import dataclass, field
+from typing import Any
+
+@dataclass(order=True)
+class PrioritizedItem:
+    priority: int
+    item: Any=field(compare=False)
+
+
+
 with open("/home/summis/advent-of-code-2023/17/input") as f:
     graph = {complex(i, j): int(weight) for j, row in enumerate(f.read().splitlines()) for i, weight in enumerate(row)}
 
@@ -29,17 +41,24 @@ directions = (1, -1, 1j, -1j)
 import cmath
 
 def djikstra(graph, start):
+    q = PriorityQueue()
+
     previous = {}
     todo = set(
         (z, i*d) for z in graph.keys() for d in directions for i in (1, 2, 3) if z - i*d in graph
     ).union(((start, 0),))
     heat_loss = {z: math.inf for z in todo}
-    heat_loss[(start, 0)] = 0
 
-    while todo:
-        closest = min(todo, key=heat_loss.get)
+    for z in todo:
+        q.put(PrioritizedItem(heat_loss[z], z))
+
+    heat_loss[(start, 0)] = 0
+    q.put(PrioritizedItem(0, (start, 0)))
+
+    while not q.empty():
+        closest = q.get().item
         z, f = closest
-        todo.remove(closest)
+        # todo.remove(closest)
 
         for d in directions:
             # Going back is not allowed
@@ -58,6 +77,7 @@ def djikstra(graph, start):
             if loss_via_path < heat_loss[(neighbor, new_f)]:
                 heat_loss[(neighbor, new_f)] = loss_via_path
                 previous[(neighbor, new_f)] = closest
+                q.put(PrioritizedItem(loss_via_path, (neighbor, new_f)))
 
     return previous
 
