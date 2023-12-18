@@ -20,6 +20,7 @@
 # 19      return dist[], prev[]
 
 import math
+import cmath
 
 from queue import PriorityQueue
 
@@ -27,10 +28,9 @@ from dataclasses import dataclass, field
 from typing import Any
 
 @dataclass(order=True)
-class PrioritizedItem:
-    priority: int
-    item: Any=field(compare=False)
-
+class HeatLossPrioritizedState:
+    heat: int
+    state: Any=field(compare=False)
 
 
 with open("/home/summis/advent-of-code-2023/17/input") as f:
@@ -38,82 +38,80 @@ with open("/home/summis/advent-of-code-2023/17/input") as f:
 
 directions = (1, -1, 1j, -1j)
 
-import cmath
 
 def djikstra(graph, start):
-    q = PriorityQueue()
+    # Does not matter from where arriving to first node as long it is outside the graph
+    initial_state = (start, 1)
 
-    previous = {}
-    todo = set(
-        (z, i*d) for z in graph.keys() for d in directions for i in (1, 2, 3) if z - i*d in graph
-    ).union(((start, 0),))
-    heat_loss = {z: math.inf for z in todo}
+    heat_loss = {}  # Cost of getting to square when coming from certain direction
+    todo = PriorityQueue()
+    # Initial state is already in included
+    states = [(node, lenght * step) for node in graph for step in directions for lenght in (1, 2, 3)]
 
-    for z in todo:
-        q.put(PrioritizedItem(heat_loss[z], z))
+    for _state in states:
+        heat_loss[_state] = 0 if _state == initial_state else math.inf
+        todo.put(HeatLossPrioritizedState(heat_loss[_state], _state))
 
-    heat_loss[(start, 0)] = 0
-    q.put(PrioritizedItem(0, (start, 0)))
+    previous = {}  # Stores solution
 
-    while not q.empty():
-        closest = q.get().item
-        z, f = closest
-        # todo.remove(closest)
+    while not todo.empty():
+        min_cost_state = todo.get().state
+        node, route = min_cost_state
 
-        for d in directions:
-            # Going back is not allowed
-            if f and cmath.phase(-f) == cmath.phase(d): continue
+        for step in directions:
+            if cmath.phase(-route) == cmath.phase(step): continue
 
-            neighbor = z + d
-            new_f = f + d if cmath.phase(f) == cmath.phase(d) else d
+            neighbor = node + step
 
-            # Out of bounds
             if neighbor not in graph: continue
 
-            # Going too far
-            if abs(new_f) > 3: continue
+            if cmath.phase(route) == cmath.phase(step):
+                route_to_neighbor = route + step  
+            else:
+                route_to_neighbor = step
 
-            loss_via_path = heat_loss[closest] + graph[neighbor]
-            if loss_via_path < heat_loss[(neighbor, new_f)]:
-                heat_loss[(neighbor, new_f)] = loss_via_path
-                previous[(neighbor, new_f)] = closest
-                q.put(PrioritizedItem(loss_via_path, (neighbor, new_f)))
+            if abs(route_to_neighbor) > 3: continue
+
+            loss = heat_loss[min_cost_state] + graph[neighbor]
+            neighbor_state = (neighbor, route_to_neighbor)
+            if loss < heat_loss[neighbor_state]:
+                heat_loss[neighbor_state] = loss
+                previous[neighbor_state] = min_cost_state
+                todo.put(HeatLossPrioritizedState(loss, neighbor_state))
 
     return previous
 
 
 def part1():
-    # print(djikstra(graph, complex(0, 0j), complex(140, 140)))
     start = complex(0, 0)
-    # end = complex(4, 3)
     end = complex(140, 140)
-    end = complex(12, 12)
-    path = djikstra(graph, start)
+    paths = djikstra(graph, start)
 
-    ends = [(_end, d) for (_end, d) in path if _end == end]
+    ends = [(_end, d) for (_end, d) in paths if _end == end]
 
-    all_results = []
+    parsed_path = []
     for x in ends:
         full_path = []
-        while x in path:
+        while x in paths:
             s, _ = x
             full_path = [s] + full_path
-            x = path[x]
-        all_results.append(full_path)
+            x = paths[x]
+        parsed_path.append(full_path)
 
-    print(min(sum(graph[point] for point in l) for l in all_results))
+    heat_losses = [sum(graph[point] for point in l) for l in parsed_path]
+    best_path = min(range(len(heat_losses)), key=heat_losses.__getitem__)
 
-
-    ret = ""
+    visualization = ""
     for j in range(int(end.imag)+1):
         for i in range(int(end.real)+1):
-            if complex(i, j) in all_results[2]:
-                ret += "#"
+            if complex(i, j) in parsed_path[best_path]:
+                visualization += "#"
             else:
-                ret += "."
-        ret += "\n"
+                visualization += "."
+        visualization += "\n"
 
-    print(ret)
+    print(heat_losses[best_path])
+    print(visualization)
 
 
 part1()
