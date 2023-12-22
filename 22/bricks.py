@@ -77,4 +77,26 @@ def part1():
     )
 
 
-print(part1())
+def count_cascade(graph, id):
+    would_fall = set([id])
+    candidates = graph[id]["supports"].copy()
+
+    while candidates:
+        candidate = candidates.pop()
+        
+        if graph[candidate]["supported_by"].issubset(would_fall):
+            would_fall.add(candidate)
+            candidates = candidates.union(graph[candidate]["supports"])
+
+    return len(would_fall) - 1 # Exclude the first removed brick
+
+
+def part2():
+    blocks = parse_blocks()
+    block_ids = sorted_block_ids(blocks)
+    graph = parse_graph(block_ids, blocks)
+
+    return sum(count_cascade(graph, id) for id in graph if id != "ground")
+
+
+print(part1(), part2())
